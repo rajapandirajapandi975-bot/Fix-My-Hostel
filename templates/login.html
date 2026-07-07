@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Fix My Hostel — SECE Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      background: #0b0f1a;
+      overflow: hidden;
+    }
+    .left {
+      flex: 1;
+      position: relative;
+      background: url("{{ url_for('static', filename='hostelimage.png') }}") center / cover no-repeat;
+    }
+    .left-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(125deg, rgba(5,15,45,0.85) 0%, rgba(0,0,0,0.55) 100%);
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 44px 52px;
+    }
+    /* ── LOGO BOX (white bg so logo is always visible) ── */
+    .top-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.97);
+      border-radius: 12px;
+      padding: 10px 20px;
+      width: fit-content;
+    }
+    .top-logo img { height: 40px; display: block; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(255,200,0,0.14);
+      border: 1px solid rgba(255,200,0,0.38);
+      color: #ffd700; font-size: 10px; font-weight: 700;
+      letter-spacing: 2.4px; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 30px; margin-bottom: 22px;
+    }
+    .head-text h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(28px, 3vw, 48px);
+      color: #fff; line-height: 1.18; margin-bottom: 14px;
+    }
+    .head-text h1 span { color: #ffd700; }
+    .head-text p {
+      color: rgba(255,255,255,0.72); font-size: 14px;
+      line-height: 1.85; max-width: 380px; margin-bottom: 32px;
+    }
+    .stats { display: flex; border-top: 1px solid rgba(255,255,255,0.18); padding-top: 26px; }
+    .stat { flex: 1; padding-right: 24px; border-right: 1px solid rgba(255,255,255,0.12); margin-right: 24px; }
+    .stat:last-child { border-right: none; margin-right: 0; }
+    .stat-n { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; color: #ffd700; line-height: 1; }
+    .stat-l { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+    /* ── RIGHT PANEL ── */
+    .right {
+      width: 460px; min-width: 460px;
+      background: #0d1220;
+      border-left: 1px solid rgba(255,255,255,0.07);
+      display: flex; flex-direction: column;
+      justify-content: center;
+      padding: 52px 50px;
+      position: relative; overflow: hidden;
+    }
+    .right::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; background: linear-gradient(90deg, #1565e0, #ffd700);
+    }
+    .glow { position: absolute; border-radius: 50%; filter: blur(100px); pointer-events: none; }
+    .g1 { width: 300px; height: 300px; background: #1565e0; opacity: 0.07; top: -80px; right: -80px; }
+    .g2 { width: 200px; height: 200px; background: #ffd700; opacity: 0.04; bottom: 40px; left: -70px; }
+
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 44px; }
+    .brand-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #1565e0, #f5c842);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .brand-name { font-family: 'Sora', sans-serif; font-size: 20px; color: white; }
+    .brand-name span { color: #ffd700; }
+
+    .form-head h2 { font-family: 'Sora', sans-serif; font-size: 26px; color: white; margin-bottom: 6px; }
+    .form-head p { font-size: 13px; color: #4e5d78; margin-bottom: 36px; line-height: 1.65; }
+
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 700;
+      letter-spacing: 1.1px; text-transform: uppercase;
+      color: #4e5d78; margin-bottom: 8px;
+    }
+    .iw { position: relative; }
+    .iw .ico { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; opacity: 0.32; pointer-events: none; }
+    .field input {
+      width: 100%; padding: 12px 16px 12px 42px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px; color: white;
+      font-family: 'Inter', sans-serif; font-size: 14px;
+      outline: none; transition: border-color .22s, box-shadow .22s;
+    }
+    .field input::placeholder { color: #273044; }
+    .field input:focus { border-color: #1565e0; box-shadow: 0 0 0 3px rgba(21,101,224,0.14); }
+    .hint { font-size: 11px; color: #273044; margin-top: 5px; }
+
+    .btn-login {
+      width: 100%; margin-top: 10px; padding: 14px;
+      background: linear-gradient(135deg, #1565e0, #0d47a1);
+      border: none; border-radius: 10px; color: white;
+      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
+      cursor: pointer; letter-spacing: 0.3px;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(21,101,224,0.38);
+    }
+    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(21,101,224,0.55); }
+    .btn-login:active { transform: translateY(0); }
+
+    .err {
+      margin-top: 14px; padding: 11px 16px;
+      background: rgba(239,68,68,0.09);
+      border: 1px solid rgba(239,68,68,0.24);
+      border-radius: 9px; color: #f87171;
+      font-size: 13px; display: flex; align-items: center; gap: 8px;
+    }
+    hr.divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 28px 0; }
+
+    /* ── FOOTER with visible logo ── */
+    .footer { text-align: center; }
+    .footer-logo-wrap {
+      display: inline-flex; align-items: center;
+      background: rgba(255,255,255,0.92);
+      border-radius: 8px; padding: 6px 16px;
+      margin-bottom: 10px;
+    }
+    .footer-logo-wrap img { height: 24px; display: block; }
+    .footer p { font-size: 11px; color: #273044; line-height: 1.7; }
+
+    @media (max-width: 860px) { .left { display: none; } .right { width: 100%; min-width: 100%; } }
+  </style>
+</head>
+<body>
+  <div class="left">
+    <div class="left-overlay">
+      <div class="top-logo">
+        <img src="https://sece.ac.in/wp-content/uploads/2024/05/clg-logo2-1536x438.webp" alt="SECE Logo">
+      </div>
+      <div class="head-text">
+        <div class="pill">🏛 SECE Hostel Management System</div>
+        <h1>Fix My Hostel —<br><span>Faster Every Time.</span></h1>
+        <p>Sri Eshwar College of Engineering's official platform for reporting and tracking hostel maintenance issues. Submit once, resolved fast.</p>
+        <div class="stats">
+          <div class="stat"><div class="stat-n">24h</div><div class="stat-l">Avg. Response</div></div>
+          <div class="stat"><div class="stat-n">6+</div><div class="stat-l">Issue Categories</div></div>
+          <div class="stat"><div class="stat-n">100%</div><div class="stat-l">SECE Students</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="glow g1"></div>
+    <div class="glow g2"></div>
+    <div class="brand">
+      <div class="brand-icon">🏠</div>
+      <div class="brand-name">Fix My <span>Hostel</span></div>
+    </div>
+    <div class="form-head">
+      <h2>Student Login</h2>
+      <p>Sign in with your official SECE email to access the hostel grievance portal.</p>
+    </div>
+    <form action="/login" method="POST">
+      <div class="field">
+        <label>College Email</label>
+        <div class="iw">
+          <span class="ico">✉</span>
+          <input type="text" name="email" placeholder="yourname@sece.ac.in" required>
+        </div>
+        <div class="hint">Only @sece.ac.in email addresses are accepted</div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="iw">
+          <span class="ico">🔒</span>
+          <input type="password" name="password" placeholder="Enter your password" required>
+        </div>
+      </div>
+      <button type="submit" class="btn-login">Login to Portal →</button>
+      {% if error %}
+      <div class="err">⚠ {{ error }}</div>
+      {% endif %}
+    </form>
+    <hr class="divider">
+    <div class="footer">
+      <div class="footer-logo-wrap">
+        <img src="https://sece.ac.in/wp-content/uploads/2024/05/clg-logo2-1536x438.webp" alt="SECE">
+      </div>
+      <p>Sri Eshwar College of Engineering<br>Hostel Grievance &amp; Maintenance Portal</p>
+    </div>
+  </div>
+</body>
+</html>

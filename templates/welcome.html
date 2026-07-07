@@ -1,0 +1,681 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Fix My Hostel — {% if role == 'admin' %}Admin Dashboard{% else %}Dashboard{% endif %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg:      #0b0f1a;
+      --surface: #0f1628;
+      --card:    #111d30;
+      --card2:   #0d1525;
+      --border:  rgba(255,255,255,0.07);
+      --blue:    #1565e0;
+      --gold:    #ffd700;
+      --green:   #10b981;
+      --orange:  #f59e0b;
+      --red:     #ef4444;
+      --sky:     #3b82f6;
+      --purple:  #8b5cf6;
+      --text:    #c9d4e8;
+      --muted:   #4e5d78;
+      --dim:     #273044;
+    }
+
+    html, body { width: 100%; overflow-x: hidden; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ═══════════════════ NAVBAR ═══════════════════ */
+    .navbar {
+      position: sticky; top: 0; z-index: 300;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 62px;
+      width: 100%;
+    }
+    .navbar::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 2px; background: linear-gradient(90deg, var(--blue), var(--gold), transparent);
+    }
+    .nb-left { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+    .nb-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .nb-icon  { width: 34px; height: 34px; background: linear-gradient(135deg, var(--blue), var(--gold)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .nb-name  { font-family: 'Sora', sans-serif; font-size: 17px; color: white; white-space: nowrap; }
+    .nb-name span { color: var(--gold); }
+    .nb-sep   { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+    /* SECE logo in navbar - white background so it's visible */
+    .nb-logo-wrap { background: rgba(255,255,255,0.95); border-radius: 7px; padding: 4px 10px; display: flex; align-items: center; }
+    .nb-logo-wrap img { height: 26px; display: block; }
+
+    .nb-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .admin-badge { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.3); color: var(--gold); padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+    .user-chip { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 30px; padding: 5px 14px 5px 6px; font-size: 12px; color: var(--muted); max-width: 200px; overflow: hidden; }
+    .user-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-av { width: 26px; height: 26px; background: linear-gradient(135deg, var(--blue), #0d47a1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: white; font-weight: 700; flex-shrink: 0; }
+    .user-av.admin-av { background: linear-gradient(135deg, #78350f, var(--gold)); }
+    .nb-link { text-decoration: none; color: var(--muted); font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 8px; transition: .18s; white-space: nowrap; }
+    .nb-link:hover, .nb-link.active { color: white; background: rgba(255,255,255,0.05); }
+    .nb-link.logout { color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+    .nb-link.logout:hover { background: rgba(239,68,68,0.1); color: #f87171; }
+
+    /* ═══════════════════ HERO ═══════════════════ */
+    .hero {
+      background: linear-gradient(135deg, #0b1535 0%, #0b0f1a 55%, #081a12 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 44px 32px 68px;
+      position: relative; overflow: hidden;
+      width: 100%;
+    }
+    .hero-orb1 { position: absolute; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(21,101,224,0.14), transparent 68%); top: -160px; right: -60px; pointer-events: none; }
+    .hero-orb2 { position: absolute; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(255,215,0,0.07), transparent 70%); bottom: -80px; left: 240px; pointer-events: none; }
+    .hero-inner { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; max-width: 1280px; margin: 0 auto; }
+    .hero-tag { font-size: 10px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+    .hero h1 { font-family: 'Sora', sans-serif; font-size: clamp(22px, 2.6vw, 36px); color: white; line-height: 1.22; margin-bottom: 8px; }
+    .hero-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, var(--blue), #0d47a1); color: white; text-decoration: none; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: transform .2s, box-shadow .2s; box-shadow: 0 4px 18px rgba(21,101,224,0.38); white-space: nowrap; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(21,101,224,0.52); }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); text-decoration: none; border-radius: 10px; font-size: 13px; font-weight: 500; transition: .2s; white-space: nowrap; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.08); }
+    /* SECE logo in hero */
+    .hero-logo-wrap { background: rgba(255,255,255,0.92); border-radius: 10px; padding: 8px 18px; display: flex; align-items: center; align-self: center; flex-shrink: 0; }
+    .hero-logo-wrap img { height: 34px; display: block; }
+
+    /* ═══════════════════ STAT STRIP ═══════════════════ */
+    .stats-wrap { max-width: 1280px; margin: 0 auto; padding: 0 32px; margin-top: -36px; position: relative; z-index: 10; }
+    .stats-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .s-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; transition: transform .22s, border-color .22s; }
+    .s-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.13); }
+    .s-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .si-blue   { background: rgba(21,101,224,0.14); }
+    .si-orange { background: rgba(245,158,11,0.14); }
+    .si-sky    { background: rgba(59,130,246,0.14); }
+    .si-green  { background: rgba(16,185,129,0.14); }
+    .s-num { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 800; color: white; line-height: 1; }
+    .s-lbl { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .c-orange .s-num { color: var(--orange); }
+    .c-sky    .s-num { color: #60a5fa; }
+    .c-green  .s-num { color: #34d399; }
+
+    /* ═══════════════════ PAGE WRAPPER ═══════════════════ */
+    .page-wrap { max-width: 1280px; margin: 0 auto; padding: 28px 32px 80px; }
+
+    /* ═══════════════════ SECTION LABEL ═══════════════════ */
+    .sec-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); margin-bottom: 12px; }
+
+    /* ═══════════════════ ADMIN LAYOUT ═══════════════════ */
+    /* top row: 3 charts */
+    .charts-top { display: grid; grid-template-columns: 1.2fr 1fr 0.9fr; gap: 16px; margin-bottom: 16px; }
+    /* bottom row: complaints table full width */
+
+    .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px; min-width: 0; }
+    .chart-card h4 { font-size: 13px; font-weight: 600; color: white; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .chart-sub { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+    .chart-wrap { position: relative; height: 200px; }
+    .chart-wrap-sm { position: relative; height: 180px; }
+
+    /* ═══════════════════ STUDENT LAYOUT ═══════════════════ */
+    .student-grid { display: grid; grid-template-columns: 1fr 290px; gap: 20px; align-items: start; }
+
+    /* ═══════════════════ TABLE ═══════════════════ */
+    .tbl-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .tbl-top { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+    .tbl-top h3 { font-family: 'Sora', sans-serif; font-size: 16px; color: white; }
+    .filter-row { display: flex; gap: 5px; flex-wrap: wrap; }
+    .flt { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 8px; cursor: pointer; transition: .16s; white-space: nowrap; }
+    .flt:hover { border-color: rgba(255,255,255,0.18); color: white; }
+    .flt.on { background: rgba(21,101,224,0.14); border-color: var(--blue); color: #60a5fa; }
+    .tbl-scroll { overflow-x: auto; width: 100%; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    thead tr { border-bottom: 1px solid var(--border); }
+    th { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); padding: 11px 14px; text-align: left; white-space: nowrap; }
+    td { padding: 13px 14px; font-size: 13px; color: var(--text); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(255,255,255,0.018); }
+    .badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+    .b-pending  { background: rgba(245,158,11,0.13);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+    .b-progress { background: rgba(59,130,246,0.13);  color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+    .b-solved   { background: rgba(16,185,129,0.13);  color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+    .pri-badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+    .pri-low  { background: rgba(16,185,129,0.1);  color: #34d399; }
+    .pri-med  { background: rgba(245,158,11,0.1);  color: #fbbf24; }
+    .pri-high { background: rgba(239,68,68,0.1);   color: #f87171; }
+    .cat-tag { font-size: 11px; background: rgba(255,255,255,0.06); padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
+    .student-name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .student-email { font-size: 11px; color: var(--muted); }
+    .desc-cell { max-width: 200px; }
+    .desc-truncate { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .note-line { font-size: 11px; color: #60a5fa; margin-top: 3px; }
+    .photo-link { font-size: 11px; color: var(--gold); text-decoration: none; display: inline-block; margin-top: 3px; }
+    .empty-row td { text-align: center; padding: 56px 20px; color: var(--muted); }
+    .e-icon { font-size: 34px; margin-bottom: 10px; }
+    .e-icon+p a { color: var(--blue); text-decoration: none; }
+    .act-row { display: flex; gap: 5px; align-items: center; }
+    .act-btn { font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 7px; border: none; cursor: pointer; transition: .16s; white-space: nowrap; }
+    .act-edit { background: rgba(59,130,246,0.14); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+    .act-del  { background: rgba(239,68,68,0.1);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+    .act-btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
+
+    /* ═══════════════════ SIDEBAR ═══════════════════ */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .side-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+    .side-card h4 { font-size: 12px; font-weight: 700; color: white; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .qa-list { display: flex; flex-direction: column; gap: 2px; }
+    .qa { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--muted); font-size: 13px; padding: 8px 10px; border-radius: 8px; transition: .16s; }
+    .qa:hover { background: rgba(255,255,255,0.04); color: white; }
+    .qa-ico { font-size: 15px; }
+    .qa-arr { margin-left: auto; opacity: .4; }
+
+    /* admin quick stats */
+    .aq-list { display: flex; flex-direction: column; gap: 8px; }
+    .aq-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; font-size: 12px; }
+    .aq-label { color: var(--muted); }
+    .aq-val   { font-weight: 700; color: white; }
+
+    .notices { display: flex; flex-direction: column; gap: 12px; }
+    .notice { display: flex; gap: 10px; align-items: flex-start; }
+    .n-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .n-title { font-size: 12px; font-weight: 600; color: white; margin-bottom: 2px; }
+    .n-body  { font-size: 11px; color: var(--muted); line-height: 1.65; }
+    .emer-box { background: linear-gradient(135deg, rgba(21,101,224,0.1), rgba(21,101,224,0.04)); border: 1px solid rgba(21,101,224,0.2); border-radius: 12px; padding: 14px; font-size: 12px; color: var(--muted); line-height: 1.75; }
+    .emer-box strong { color: #60a5fa; }
+    .emer-warn { color: var(--gold); font-weight: 600; margin-top: 8px; display: block; }
+
+    /* ═══════════════════ MODAL ═══════════════════ */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 500px; position: relative; animation: mIn .22s ease; }
+    @keyframes mIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .modal h3 { font-family: 'Sora', sans-serif; font-size: 18px; color: white; margin-bottom: 4px; }
+    .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .modal label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 7px; }
+    .modal select, .modal textarea { width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; color: white; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; }
+    .modal select option { background: #111d30; }
+    .modal textarea { resize: vertical; min-height: 88px; }
+    .mfield { margin-bottom: 16px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+    .btn-cancel { padding: 10px 20px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); border-radius: 9px; font-size: 13px; cursor: pointer; transition: .16s; }
+    .btn-cancel:hover { color: white; }
+    .btn-save { padding: 10px 22px; background: linear-gradient(135deg, var(--blue), #0d47a1); border: none; border-radius: 9px; color: white; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform .18s; }
+    .btn-save:hover { transform: translateY(-1px); }
+    .modal-close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+    .modal-close:hover { color: white; }
+
+    /* ═══════════════════ TOAST ═══════════════════ */
+    .toast { position: fixed; bottom: 28px; right: 28px; background: linear-gradient(135deg,#064e3b,#065f46); border: 1px solid rgba(16,185,129,0.28); border-radius: 14px; padding: 14px 20px; color: #34d399; font-size: 14px; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px; z-index: 999; animation: su .3s ease; }
+    @keyframes su { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ═══════════════════ RESPONSIVE ═══════════════════ */
+    @media (max-width: 1100px) {
+      .charts-top { grid-template-columns: 1fr 1fr; }
+      .charts-top .chart-card:last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 900px) {
+      .student-grid { grid-template-columns: 1fr; }
+      .stats-strip  { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .charts-top { grid-template-columns: 1fr; }
+      .navbar { padding: 0 16px; }
+      .page-wrap { padding: 20px 16px 60px; }
+      .hero { padding: 32px 16px 60px; }
+      .stats-wrap { padding: 0 16px; }
+      .nb-logo-wrap, .nb-sep:last-of-type { display: none; }
+    }
+    @media (max-width: 480px) {
+      .stats-strip { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ NAVBAR ══════════════════════════════ -->
+<nav class="navbar">
+  <div class="nb-left">
+    <a href="/welcome" class="nb-brand">
+      <div class="nb-icon">🏠</div>
+      <div class="nb-name">Fix My <span>Hostel</span></div>
+    </a>
+    <div class="nb-sep"></div>
+    <div class="nb-logo-wrap">
+      <img src="https://sece.ac.in/wp-content/uploads/2024/05/clg-logo2-1536x438.webp" alt="SECE">
+    </div>
+  </div>
+  <div class="nb-right">
+    {% if role == 'admin' %}<span class="admin-badge">⚙ Admin</span>{% endif %}
+    <div class="user-chip">
+      <div class="user-av {% if role=='admin' %}admin-av{% endif %}">{{ email[0]|upper }}</div>
+      <span>{{ email }}</span>
+    </div>
+    <a href="/welcome" class="nb-link active">Dashboard</a>
+    {% if role != 'admin' %}<a href="/complaint" class="nb-link">New Complaint</a>{% endif %}
+    <a href="/logout" class="nb-link logout">Logout</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════ HERO ══════════════════════════════ -->
+<section class="hero">
+  <div class="hero-orb1"></div><div class="hero-orb2"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-tag">
+        {% if role == 'admin' %}🏛 SECE Hostel Portal · Admin Control Panel{% else %}🏛 SECE Hostel Portal · Student Dashboard{% endif %}
+      </div>
+      <h1>{% if role == 'admin' %}Admin Dashboard 🛠️{% else %}Welcome Back 👋{% endif %}</h1>
+      <p class="hero-sub">
+        {% if role == 'admin' %}Manage all student complaints, update statuses, and monitor hostel performance.
+        {% else %}Track your complaints, raise new issues, and stay updated.{% endif %}
+      </p>
+      <div class="hero-btns">
+        {% if role != 'admin' %}<a href="/complaint" class="btn-primary">+ Raise New Complaint</a>{% endif %}
+        <a href="#complaints" class="btn-ghost">{% if role=='admin' %}View All Complaints →{% else %}View My Complaints →{% endif %}</a>
+      </div>
+    </div>
+    <div class="hero-logo-wrap">
+      <img src="https://sece.ac.in/wp-content/uploads/2024/05/clg-logo2-1536x438.webp" alt="SECE">
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ STAT STRIP ══════════════════════════════ -->
+<div class="stats-wrap">
+  <div class="stats-strip">
+    <div class="s-card">
+      <div class="s-icon si-blue">📋</div>
+      <div><div class="s-num">{{ stats.total }}</div><div class="s-lbl">Total Complaints</div></div>
+    </div>
+    <div class="s-card c-orange">
+      <div class="s-icon si-orange">⏳</div>
+      <div><div class="s-num">{{ stats.pending }}</div><div class="s-lbl">Pending</div></div>
+    </div>
+    <div class="s-card c-sky">
+      <div class="s-icon si-sky">🔧</div>
+      <div><div class="s-num">{{ stats.in_progress }}</div><div class="s-lbl">In Progress</div></div>
+    </div>
+    <div class="s-card c-green">
+      <div class="s-icon si-green">✅</div>
+      <div><div class="s-num">{{ stats.resolved }}</div><div class="s-lbl">Resolved</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ MAIN CONTENT ══════════════════════════════ -->
+<div class="page-wrap">
+
+  {% if role == 'admin' %}
+  <!-- ── ADMIN VIEW ─────────────────────────────────────────────────── -->
+
+  <!-- CHARTS ROW -->
+  <div class="sec-label" style="margin-top:32px;">Analytics Overview</div>
+  <div class="charts-top">
+
+    <!-- Monthly Issued vs Resolved -->
+    <div class="chart-card">
+      <h4>📅 Monthly Complaints Overview</h4>
+      <p class="chart-sub">Issues raised vs resolved — last 6 months</p>
+      <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+    </div>
+
+    <!-- Category Doughnut -->
+    <div class="chart-card">
+      <h4>🏷 Complaints by Category</h4>
+      <p class="chart-sub">Distribution across all types</p>
+      <div class="chart-wrap"><canvas id="catChart"></canvas></div>
+    </div>
+
+    <!-- Priority Bar -->
+    <div class="chart-card">
+      <h4>🎯 Priority Levels</h4>
+      <p class="chart-sub">Low / Medium / High breakdown</p>
+      <div class="chart-wrap-sm"><canvas id="priChart"></canvas></div>
+
+      <!-- mini resolution rate -->
+      <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Resolution Rate</div>
+        <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,#10b981,#34d399);width:{% if stats.total > 0 %}{{ ((stats.resolved / stats.total)*100)|round|int }}{% else %}0{% endif %}%;transition:width 1s;"></div>
+        </div>
+        <div style="font-size:20px;font-weight:800;font-family:'Sora',sans-serif;color:#34d399;margin-top:6px;">
+          {% if stats.total > 0 %}{{ ((stats.resolved / stats.total)*100)|round|int }}%{% else %}—{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPLAINTS TABLE (full width) -->
+  <div id="complaints" style="margin-top:8px;">
+    <div class="sec-label">All Student Complaints</div>
+    <div class="tbl-card">
+      <div class="tbl-top">
+        <h3>Complaint Management</h3>
+        <div class="filter-row">
+          <button class="flt on" data-status="all">All ({{ stats.total }})</button>
+          <button class="flt" data-status="Pending">⏳ Pending ({{ stats.pending }})</button>
+          <button class="flt" data-status="In Progress">🔧 In Progress ({{ stats.in_progress }})</button>
+          <button class="flt" data-status="Resolved">✅ Resolved ({{ stats.resolved }})</button>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Room</th>
+              <th>Priority</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if complaints %}
+              {% for c in complaints %}
+              <tr class="complaint-row" data-status="{{ c.status }}">
+                <td style="color:var(--dim);font-size:11px;">{{ loop.index }}</td>
+                <td>
+                  <div class="student-name">{{ c.student_name }}</div>
+                  <div class="student-email">{{ c.student_email }}</div>
+                </td>
+                <td><span class="cat-tag">{{ c.category }}</span></td>
+                <td class="desc-cell">
+                  <span class="desc-truncate" title="{{ c.description }}">{{ c.description | truncate(60) }}</span>
+                  {% if c.admin_note %}<div class="note-line">📝 {{ c.admin_note | truncate(45) }}</div>{% endif %}
+                  {% if c.image_filename %}<a class="photo-link" href="{{ url_for('static', filename='uploads/' ~ c.image_filename) }}" target="_blank">🖼 Photo</a>{% endif %}
+                </td>
+                <td style="font-weight:600;white-space:nowrap;">{{ c.room_number }}</td>
+                <td>
+                  {% if c.priority == 'High' %}<span class="pri-badge pri-high">🔴 High</span>
+                  {% elif c.priority == 'Medium' %}<span class="pri-badge pri-med">🟡 Med</span>
+                  {% else %}<span class="pri-badge pri-low">🟢 Low</span>{% endif %}
+                </td>
+                <td style="font-size:11px;color:var(--muted);white-space:nowrap;">{{ c.created_at.strftime('%d %b %Y') }}</td>
+                <td>
+                  {% if c.status == 'Pending' %}<span class="badge b-pending">⏳ Pending</span>
+                  {% elif c.status == 'In Progress' %}<span class="badge b-progress">🔧 In Progress</span>
+                  {% else %}<span class="badge b-solved">✅ Resolved</span>{% endif %}
+                </td>
+                <td>
+                  <div class="act-row">
+                    <button class="act-btn act-edit" onclick="openModal({{ c.id }}, '{{ c.status }}', `{{ (c.admin_note or '')|replace('`','') }}`)">Edit</button>
+                    <form action="/admin/delete_complaint/{{ c.id }}" method="POST" onsubmit="return confirm('Delete complaint #{{ c.id }}?');" style="display:inline;">
+                      <button type="submit" class="act-btn act-del">🗑</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+            <tr class="empty-row"><td colspan="9"><div class="e-icon">📋</div><p>No complaints yet.</p></td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- ── STUDENT VIEW ────────────────────────────────────────────────── -->
+  <div class="student-grid" style="margin-top:28px;">
+    <div id="complaints">
+      <div class="sec-label">My Complaints</div>
+      <div class="tbl-card">
+        <div class="tbl-top">
+          <h3>Complaint History</h3>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="filter-row">
+              <button class="flt on" data-status="all">All</button>
+              <button class="flt" data-status="Pending">⏳ Pending</button>
+              <button class="flt" data-status="In Progress">🔧 In Progress</button>
+              <button class="flt" data-status="Resolved">✅ Resolved</button>
+            </div>
+            <a href="/complaint" class="btn-primary" style="font-size:12px;padding:7px 14px;">+ New</a>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Room</th>
+                <th>Priority</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if complaints %}
+                {% for c in complaints %}
+                <tr class="complaint-row" data-status="{{ c.status }}">
+                  <td style="color:var(--dim);font-size:11px;">{{ loop.index }}</td>
+                  <td><span class="cat-tag">{{ c.category }}</span></td>
+                  <td class="desc-cell">
+                    <span class="desc-truncate" title="{{ c.description }}">{{ c.description | truncate(70) }}</span>
+                    {% if c.admin_note %}<div class="note-line">📝 {{ c.admin_note }}</div>{% endif %}
+                    {% if c.image_filename %}<a class="photo-link" href="{{ url_for('static', filename='uploads/' ~ c.image_filename) }}" target="_blank">🖼 Photo</a>{% endif %}
+                  </td>
+                  <td style="font-weight:600;">{{ c.room_number }}</td>
+                  <td>
+                    {% if c.priority == 'High' %}<span class="pri-badge pri-high">🔴 High</span>
+                    {% elif c.priority == 'Medium' %}<span class="pri-badge pri-med">🟡 Medium</span>
+                    {% else %}<span class="pri-badge pri-low">🟢 Low</span>{% endif %}
+                  </td>
+                  <td style="font-size:11px;color:var(--muted);">{{ c.created_at.strftime('%d %b %Y') }}</td>
+                  <td>
+                    {% if c.status == 'Pending' %}<span class="badge b-pending">⏳ Pending</span>
+                    {% elif c.status == 'In Progress' %}<span class="badge b-progress">🔧 In Progress</span>
+                    {% else %}<span class="badge b-solved">✅ Resolved</span>{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+              <tr class="empty-row"><td colspan="7"><div class="e-icon">📋</div><p>No complaints yet.<br><a href="/complaint">Raise your first complaint →</a></p></td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Sidebar -->
+    <div class="sidebar">
+      <div class="side-card">
+        <h4>⚡ Quick Report</h4>
+        <div class="qa-list">
+          <a href="/complaint" class="qa"><span class="qa-ico">💡</span> Electrical Issue <span class="qa-arr">→</span></a>
+          <a href="/complaint" class="qa"><span class="qa-ico">🚿</span> Plumbing / Water <span class="qa-arr">→</span></a>
+          <a href="/complaint" class="qa"><span class="qa-ico">📶</span> Wi-Fi Problem <span class="qa-arr">→</span></a>
+          <a href="/complaint" class="qa"><span class="qa-ico">🧹</span> Cleaning Issue <span class="qa-arr">→</span></a>
+          <a href="/complaint" class="qa"><span class="qa-ico">🪑</span> Furniture Damage <span class="qa-arr">→</span></a>
+          <a href="/complaint" class="qa"><span class="qa-ico">📌</span> Other Issue <span class="qa-arr">→</span></a>
+        </div>
+      </div>
+      <div class="side-card">
+        <h4>📢 Notice Board</h4>
+        <div class="notices">
+          <div class="notice"><div class="n-dot" style="background:#ef4444;"></div><div><div class="n-title">Water Interruption</div><div class="n-body">Block B — 6 AM–9 AM every Sunday.</div></div></div>
+          <div class="notice"><div class="n-dot" style="background:#ffd700;"></div><div><div class="n-title">Wi-Fi Upgrade</div><div class="n-body">New routers on floors 3 & 4.</div></div></div>
+          <div class="notice"><div class="n-dot" style="background:#10b981;"></div><div><div class="n-title">Response SLA</div><div class="n-body">All issues resolved within 24 hrs.</div></div></div>
+        </div>
+      </div>
+      <div class="side-card">
+        <h4>🚨 Emergency</h4>
+        <div class="emer-box">
+          <strong>Hostel Warden Office</strong><br>
+          For power failures or major leaks, contact the warden via block intercom.
+          <span class="emer-warn">⚠ Do not wait — report immediately.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ══════════════════════════════ ADMIN MODAL ══════════════════════════════ -->
+{% if role == 'admin' %}
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3>Update Complaint</h3>
+    <p class="modal-sub">Change status and add an admin note for the student.</p>
+    <form id="updateForm" method="POST">
+      <div class="mfield">
+        <label>Status</label>
+        <select name="status" id="modalStatus">
+          <option value="Pending">⏳ Pending</option>
+          <option value="In Progress">🔧 In Progress</option>
+          <option value="Resolved">✅ Resolved</option>
+        </select>
+      </div>
+      <div class="mfield">
+        <label>Admin Note <span style="text-transform:none;font-weight:400;color:var(--dim);">(visible to student)</span></label>
+        <textarea name="admin_note" id="modalNote" placeholder="e.g. Technician dispatched, will fix by tomorrow…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn-save">Save Changes →</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- ══════════════════════════════ FLASH TOAST ══════════════════════════════ -->
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="toast" id="toast">✅ {{ messages[0] }}</div>
+<script>setTimeout(()=>{const t=document.getElementById('toast');if(t){t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(()=>t.remove(),400);}},4000);</script>
+{% endif %}
+{% endwith %}
+
+<script>
+/* ── Filter ── */
+document.querySelectorAll('.flt').forEach(btn => {
+  btn.addEventListener('click', function () {
+    this.closest('.filter-row').querySelectorAll('.flt').forEach(b => b.classList.remove('on'));
+    this.classList.add('on');
+    const s = this.dataset.status;
+    document.querySelectorAll('tr.complaint-row').forEach(row => {
+      row.style.display = (s === 'all' || row.dataset.status === s) ? '' : 'none';
+    });
+  });
+});
+
+/* ── Admin modal ── */
+function openModal(id, status, note) {
+  document.getElementById('updateForm').action = '/admin/update_complaint/' + id;
+  document.getElementById('modalStatus').value  = status;
+  document.getElementById('modalNote').value    = note;
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+function closeModal() { document.getElementById('modalBackdrop').classList.remove('open'); }
+document.getElementById('modalBackdrop')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+/* ── Charts (admin only) ── */
+{% if role == 'admin' %}
+const monthLabels    = {{ month_labels    | safe }};
+const monthlyIssued  = {{ monthly_issued  | safe }};
+const monthlyResolved= {{ monthly_resolved| safe }};
+const catLabels      = {{ cat_labels      | safe }};
+const catCounts      = {{ cat_counts      | safe }};
+const priDict        = {{ pri_dict        | safe }};
+
+Chart.defaults.color = '#4e5d78';
+Chart.defaults.font.family = 'Inter';
+
+/* Monthly line/bar */
+new Chart(document.getElementById('monthlyChart'), {
+  data: {
+    labels: monthLabels,
+    datasets: [
+      {
+        type: 'bar',
+        label: 'Issued',
+        data: monthlyIssued,
+        backgroundColor: 'rgba(21,101,224,0.45)',
+        borderColor: '#1565e0',
+        borderWidth: 1,
+        borderRadius: 5,
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: 'Resolved',
+        data: monthlyResolved,
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16,185,129,0.1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#10b981',
+        pointRadius: 4,
+        tension: 0.38,
+        fill: true,
+        order: 1,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top', labels: { color: '#c9d4e8', font: { size: 11 }, boxWidth: 12, padding: 12 } }
+    },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#4e5d78', font: { size: 11 } } },
+      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#4e5d78', stepSize: 1, font: { size: 11 } }, beginAtZero: true }
+    }
+  }
+});
+
+/* Category doughnut */
+if (catLabels.length > 0) {
+  const catColors = ['#1565e0','#f59e0b','#10b981','#8b5cf6','#ef4444','#3b82f6','#ec4899','#14b8a6'];
+  new Chart(document.getElementById('catChart'), {
+    type: 'doughnut',
+    data: {
+      labels: catLabels,
+      datasets: [{ data: catCounts, backgroundColor: catColors, borderColor: '#111d30', borderWidth: 3, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: '#c9d4e8', font: { size: 11 }, boxWidth: 12, padding: 8 } } },
+      cutout: '60%'
+    }
+  });
+}
+
+/* Priority bar */
+new Chart(document.getElementById('priChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Low', 'Medium', 'High'],
+    datasets: [{
+      data: [priDict['Low']||0, priDict['Medium']||0, priDict['High']||0],
+      backgroundColor: ['rgba(16,185,129,0.65)','rgba(245,158,11,0.65)','rgba(239,68,68,0.65)'],
+      borderColor:     ['#10b981','#f59e0b','#ef4444'],
+      borderWidth: 1, borderRadius: 5
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#4e5d78', font: { size: 11 } } },
+      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#4e5d78', stepSize: 1, font: { size: 11 } }, beginAtZero: true }
+    }
+  }
+});
+{% endif %}
+</script>
+</body>
+</html>

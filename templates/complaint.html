@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Fix My Hostel — Submit Complaint</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0b0f1a; --surface: #0f1628; --card: #111d30;
+      --border: rgba(255,255,255,0.07);
+      --blue: #1565e0; --gold: #ffd700;
+      --green: #10b981; --orange: #f59e0b; --red: #ef4444;
+      --text: #c9d4e8; --muted: #4e5d78; --dim: #273044;
+    }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    /* NAVBAR */
+    .navbar {
+      position:sticky; top:0; z-index:200;
+      background:var(--surface); border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 40px; height:62px;
+    }
+    .navbar::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--blue),var(--gold),transparent); }
+    .nb-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .nb-icon { width:34px; height:34px; background:linear-gradient(135deg,var(--blue),var(--gold)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+    .nb-name { font-family:'Sora',sans-serif; font-size:17px; color:white; }
+    .nb-name span { color:var(--gold); }
+    .nb-right { display:flex; align-items:center; gap:6px; }
+    .nb-link { text-decoration:none; color:var(--muted); font-size:13px; font-weight:500; padding:7px 14px; border-radius:8px; transition:.18s; }
+    .nb-link:hover, .nb-link.active { color:white; background:rgba(255,255,255,0.05); }
+    .nb-link.logout { color:var(--red); border:1px solid rgba(239,68,68,0.2); }
+    .nb-link.logout:hover { background:rgba(239,68,68,0.1); color:#f87171; }
+
+    /* BREADCRUMB */
+    .breadcrumb { max-width:1100px; margin:0 auto; padding:18px 40px 0; font-size:12px; color:var(--dim); display:flex; align-items:center; gap:8px; }
+    .breadcrumb a { color:var(--muted); text-decoration:none; }
+    .breadcrumb a:hover { color:white; }
+
+    /* PAGE GRID */
+    .page { max-width:1100px; margin:24px auto 80px; padding:0 40px; display:grid; grid-template-columns:1fr 320px; gap:28px; align-items:start; }
+
+    /* FORM CARD */
+    .form-card { background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden; }
+    .form-topbar { height:3px; background:linear-gradient(90deg,var(--blue),var(--gold)); }
+    .form-body { padding:36px 40px; }
+    .f-tag { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+    .form-body h2 { font-family:'Sora',sans-serif; font-size:24px; color:white; margin-bottom:6px; }
+    .f-sub { font-size:13px; color:var(--muted); margin-bottom:30px; line-height:1.6; }
+
+    /* Steps */
+    .steps { display:flex; border-radius:10px; overflow:hidden; border:1px solid var(--border); margin-bottom:30px; }
+    .step { flex:1; padding:11px 8px; text-align:center; background:rgba(255,255,255,0.02); font-size:11px; font-weight:600; color:var(--dim); border-right:1px solid var(--border); transition:.2s; }
+    .step:last-child { border-right:none; }
+    .step.active { background:rgba(21,101,224,0.14); color:#60a5fa; }
+    .step.done { background:rgba(16,185,129,0.08); color:#34d399; }
+    .step-ico { font-size:15px; display:block; margin-bottom:3px; }
+
+    /* Form layout */
+    .fg { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .full { grid-column:1/-1; }
+    .field { display:flex; flex-direction:column; }
+    .field label { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .req::after { content:' *'; color:var(--red); }
+    .iw { position:relative; }
+    .iw .ico { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:14px; opacity:.3; pointer-events:none; }
+
+    input, select, textarea {
+      width:100%; padding:12px 16px 12px 42px;
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09);
+      border-radius:10px; color:white;
+      font-family:'Inter',sans-serif; font-size:14px; outline:none;
+      transition:border-color .22s, box-shadow .22s;
+    }
+    input::placeholder, textarea::placeholder { color:var(--dim); }
+    input:focus, select:focus, textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(21,101,224,0.14); }
+    select { appearance:none; cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234e5d78' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 16px center; padding-right:40px; }
+    select option { background:#111d30; color:white; }
+    textarea { resize:vertical; min-height:108px; line-height:1.65; padding-top:12px; padding-left:16px; }
+    .no-ico { padding-left:16px; }
+    .char-c { font-size:11px; color:var(--dim); margin-top:5px; text-align:right; }
+
+    /* Chips */
+    .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+    .chip { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid var(--border); color:var(--muted); cursor:pointer; font-size:13px; font-weight:500; transition:.18s; user-select:none; }
+    .chip:hover { border-color:var(--blue); color:white; background:rgba(21,101,224,0.09); }
+    .chip.on { border-color:var(--blue); color:#60a5fa; background:rgba(21,101,224,0.14); }
+
+    .pri-row { display:flex; gap:10px; }
+    .pri { flex:1; padding:10px 8px; border-radius:8px; text-align:center; background:rgba(255,255,255,0.03); border:1px solid var(--border); font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; transition:.18s; }
+    .pri:hover { border-color:rgba(255,255,255,0.16); color:white; }
+    .pri.on.low  { border-color:var(--green);  background:rgba(16,185,129,0.1);  color:#34d399; }
+    .pri.on.med  { border-color:var(--orange); background:rgba(245,158,11,0.1); color:#fbbf24; }
+    .pri.on.high { border-color:var(--red);    background:rgba(239,68,68,0.1);  color:#f87171; }
+    .pri-ico { font-size:17px; display:block; margin-bottom:4px; }
+
+    .file-drop { border:2px dashed rgba(255,255,255,0.08); border-radius:12px; padding:28px 20px; text-align:center; position:relative; cursor:pointer; transition:.22s; }
+    .file-drop:hover { border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.02); }
+    .file-drop input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .fd-ico { font-size:26px; opacity:.45; margin-bottom:8px; }
+    .file-drop p { font-size:13px; color:var(--dim); line-height:1.7; }
+    .file-drop span { color:var(--blue); font-weight:600; }
+    .fname { font-size:12px; color:#34d399; margin-top:6px; }
+
+    .btn-submit { width:100%; margin-top:6px; padding:14px; background:linear-gradient(135deg,var(--blue),#0d47a1); border:none; border-radius:12px; color:white; font-family:'Inter',sans-serif; font-size:15px; font-weight:600; cursor:pointer; letter-spacing:.3px; transition:transform .2s, box-shadow .2s; box-shadow:0 4px 18px rgba(21,101,224,0.38); }
+    .btn-submit:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(21,101,224,0.52); }
+
+
+    .sidebar { display:flex; flex-direction:column; gap:18px; }
+    .side-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px; }
+    .side-card h4 { font-size:12px; font-weight:700; color:white; letter-spacing:.4px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .hw-list { list-style:none; display:flex; flex-direction:column; }
+    .hw-list li { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12px; color:var(--muted); line-height:1.65; }
+    .hw-list li:last-child { border-bottom:none; padding-bottom:0; }
+    .hw-n { width:22px; height:22px; border-radius:50%; flex-shrink:0; background:rgba(21,101,224,0.14); color:#60a5fa; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; margin-top:1px; }
+    .cat-leg { display:flex; flex-direction:column; gap:9px; }
+    .cl { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--muted); }
+    .cl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .cl strong { color:var(--text); font-weight:500; }
+    .emer { background:linear-gradient(135deg,rgba(21,101,224,0.1),rgba(21,101,224,0.04)); border:1px solid rgba(21,101,224,0.2); border-radius:12px; padding:16px; font-size:12px; color:var(--muted); line-height:1.75; }
+    .emer strong { color:#60a5fa; font-size:13px; }
+    .ew { color:var(--gold); font-weight:600; margin-top:8px; display:block; }
+
+    .toast { position:fixed; bottom:30px; right:30px; background:linear-gradient(135deg,#064e3b,#065f46); border:1px solid rgba(16,185,129,0.28); border-radius:14px; padding:15px 22px; color:#34d399; font-size:14px; font-weight:600; box-shadow:0 8px 30px rgba(0,0,0,0.5); display:flex; align-items:center; gap:10px; z-index:999; animation:su .3s ease; }
+    @keyframes su { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    @media(max-width:900px) {
+      .page { grid-template-columns:1fr; padding:0 20px; }
+      .form-body { padding:24px 20px; }
+      .fg { grid-template-columns:1fr; }
+      .navbar { padding:0 20px; }
+      .breadcrumb { padding:14px 20px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a class="nb-brand" href="/welcome">
+      <div class="nb-icon">🏠</div>
+      <div class="nb-name">Fix My <span>Hostel</span></div>
+    </a>
+    <div class="nb-right">
+      <a href="/welcome"   class="nb-link">Dashboard</a>
+      <a href="/complaint" class="nb-link active">Complaint</a>
+      <a href="/logout"    class="nb-link logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="breadcrumb">
+    <a href="/welcome">Dashboard</a>
+    <span>›</span>
+    <span style="color:var(--text)">Submit Complaint</span>
+  </div>
+
+  <div class="page">
+
+    <div class="form-card">
+      <div class="form-topbar"></div>
+      <div class="form-body">
+        <div class="f-tag">Maintenance Request</div>
+        <h2>Submit a Complaint</h2>
+        <p class="f-sub">Fill in the details below. Our team responds within <strong style="color:white;">24 hours</strong>.</p>
+
+        <div class="steps" id="steps">
+          <div class="step active"><span class="step-ico">📝</span>DETAILS</div>
+          <div class="step"><span class="step-ico">📷</span>PHOTO</div>
+          <div class="step"><span class="step-ico">✅</span>SUBMIT</div>
+        </div>
+
+        <form method="POST" action="/submit_complaint" enctype="multipart/form-data">
+          <div class="fg">
+
+            <div class="field">
+              <label class="req">Student Name</label>
+              <div class="iw">
+                <span class="ico">👤</span>
+                <input type="text" name="name" placeholder="Your full name" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="req">Room Number</label>
+              <div class="iw">
+                <span class="ico">🚪</span>
+                <input type="text" name="room" placeholder="e.g. A-204, B-108" required>
+              </div>
+            </div>
+
+            <div class="field full">
+              <label class="req">Complaint Category</label>
+              <div class="chips">
+                <span class="chip" data-v="Electrical"         onclick="pickCat(this)">⚡ Electrical</span>
+                <span class="chip" data-v="Plumbing and Water" onclick="pickCat(this)">🚿 Plumbing</span>
+                <span class="chip" data-v="Wifi"               onclick="pickCat(this)">📶 Wi-Fi</span>
+                <span class="chip" data-v="Cleaning"           onclick="pickCat(this)">🧹 Cleaning</span>
+                <span class="chip" data-v="Furniture"          onclick="pickCat(this)">🪑 Furniture</span>
+                <span class="chip" data-v="Others"             onclick="pickCat(this)">📌 Others</span>
+              </div>
+              <div class="iw">
+                <span class="ico">🏷</span>
+                <select name="category" id="catSel" required>
+                  <option value="">Select a category</option>
+                  <option>Electrical</option>
+                  <option>Plumbing and Water</option>
+                  <option>Cleaning</option>
+                  <option>Wifi</option>
+                  <option>Furniture</option>
+                  <option>Others</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field full">
+              <label class="req">Priority Level</label>
+              <div class="pri-row">
+                <div class="pri low"      onclick="pickPri(this,'low')"><span class="pri-ico">🟢</span>Low</div>
+                <div class="pri med on"   onclick="pickPri(this,'med')"><span class="pri-ico">🟡</span>Medium</div>
+                <div class="pri high"     onclick="pickPri(this,'high')"><span class="pri-ico">🔴</span>High / Urgent</div>
+              </div>
+              <input type="hidden" name="priority" id="priVal" value="Medium">
+            </div>
+
+            <div class="field full">
+              <label class="req">Description</label>
+              <textarea name="description" id="desc" class="no-ico"
+                placeholder="Describe the issue — what happened, exact location, since when, how severe..."
+                required maxlength="500"></textarea>
+              <div class="char-c"><span id="cn">0</span> / 500</div>
+            </div>
+
+            <div class="field full">
+              <label>Attach Photo <span style="color:var(--dim);font-weight:400;">(Optional — recommended)</span></label>
+              <div class="file-drop">
+                <input type="file" name="image" accept="image/*" id="fileIn">
+                <div class="fd-ico">📎</div>
+                <p><span>Click to upload</span> or drag &amp; drop<br>PNG, JPG, WEBP — Max 10 MB</p>
+              </div>
+              <div class="fname" id="fname"></div>
+            </div>
+
+          </div>
+
+          <button type="submit" class="btn-submit">Submit Complaint →</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="side-card">
+        <h4>📋 How It Works</h4>
+        <ul class="hw-list">
+          <li><div class="hw-n">1</div><div>Enter your name, room number and select a category</div></li>
+          <li><div class="hw-n">2</div><div>Set priority and describe the problem clearly</div></li>
+          <li><div class="hw-n">3</div><div>Attach a photo to help our team understand faster</div></li>
+          <li><div class="hw-n">4</div><div>Submit — our team will respond within 24 hours</div></li>
+          <li><div class="hw-n">5</div><div>Track your status on the dashboard anytime</div></li>
+        </ul>
+      </div>
+
+      <div class="side-card">
+        <h4>🏷 Category Guide</h4>
+        <div class="cat-leg">
+          <div class="cl"><div class="cl-dot" style="background:#f59e0b;"></div><strong>Electrical</strong> — lights, fans, sockets</div>
+          <div class="cl"><div class="cl-dot" style="background:#3b82f6;"></div><strong>Plumbing</strong> — leaks, taps, drainage</div>
+          <div class="cl"><div class="cl-dot" style="background:#10b981;"></div><strong>Wi-Fi</strong> — slow speed, no signal</div>
+          <div class="cl"><div class="cl-dot" style="background:#8b5cf6;"></div><strong>Cleaning</strong> — hygiene, common areas</div>
+          <div class="cl"><div class="cl-dot" style="background:#ec4899;"></div><strong>Furniture</strong> — broken beds, chairs</div>
+          <div class="cl"><div class="cl-dot" style="background:#4e5d78;"></div><strong>Others</strong> — anything else</div>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <h4>🚨 Emergency Contact</h4>
+        <div class="emer">
+          <strong>Hostel Warden Office</strong><br>
+          For power failures or major water leaks, contact the warden via block intercom or visit the hostel office.
+          <span class="ew">⚠ Do not wait — report immediately.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for msg in messages %}
+    <div class="toast" id="toast">✅ {{ msg }}</div>
+    <script>
+      setTimeout(()=>{const t=document.getElementById('toast');if(t){t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(()=>t.remove(),400);}},4000);
+    </script>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <script>
+    function pickCat(el) {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+      el.classList.add('on');
+      document.getElementById('catSel').value = el.dataset.v;
+      advStep(1);
+    }
+    document.getElementById('catSel').addEventListener('change', function () {
+      document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.v === this.value));
+    });
+    function pickPri(el, level) {
+      document.querySelectorAll('.pri').forEach(p => p.classList.remove('on','low','med','high'));
+      el.classList.add('on', level);
+      document.getElementById('priVal').value = {low:'Low',med:'Medium',high:'High'}[level];
+    }
+    const desc = document.getElementById('desc');
+    desc.addEventListener('input', () => { document.getElementById('cn').textContent = desc.value.length; advStep(1); });
+    document.getElementById('fileIn').addEventListener('change', function () {
+      document.getElementById('fname').textContent = this.files.length ? '📎 '+this.files[0].name : '';
+      advStep(2);
+    });
+    function advStep(idx) {
+      const steps = document.querySelectorAll('.step');
+      for (let i = 0; i < idx; i++) { if(!steps[i].classList.contains('done')){steps[i].classList.remove('active');steps[i].classList.add('done');} }
+      if (!steps[idx].classList.contains('done')) steps[idx].classList.add('active');
+    }
+  </script>
+
+</body>
+</html>
